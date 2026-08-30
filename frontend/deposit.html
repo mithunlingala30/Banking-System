@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit Funds &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">💳 Instant Ledger Credit</div>
+            <h1 class="page-title">Deposit Funds</h1>
+            <p class="page-subtitle">Add liquidity to your account balance in Rupees (₹) with zero processing fees and instant ledger confirmation.</p>
+        </div>
+        <div>
+            <a href="dashboard.html" class="btn btn-outline">&larr; Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: start;">
+        <!-- LEFT COLUMN: Deposit Form -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>💵</span> Deposit Specifications
+                </div>
+                <span class="pill pill-approved">Instant Settlement</span>
+            </div>
+
+            <form onsubmit="return handleDeposit(event)">
+                <!-- Deposit Method Selector -->
+                <div class="form-group">
+                    <label class="form-label">Funding Channel</label>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                        <div class="scheme-card selected" id="method-wire" onclick="selectMethod('wire')">
+                            <span style="font-size: 1.5rem;">🏦</span>
+                            <span class="scheme-name" style="font-size: 0.85rem;">IMPS / NEFT / UPI</span>
+                            <span class="scheme-tenure">Instant transfer</span>
+                        </div>
+                        <div class="scheme-card" id="method-card" onclick="selectMethod('card')">
+                            <span style="font-size: 1.5rem;">💳</span>
+                            <span class="scheme-name" style="font-size: 0.85rem;">Debit / ATM Card</span>
+                            <span class="scheme-tenure">Simulated card</span>
+                        </div>
+                        <div class="scheme-card" id="method-cash" onclick="selectMethod('cash')">
+                            <span style="font-size: 1.5rem;">💰</span>
+                            <span class="scheme-name" style="font-size: 0.85rem;">Branch CDM</span>
+                            <span class="scheme-tenure">Cash deposit</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Amount Input -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Deposit Amount (INR ₹)</label>
+                        <span style="font-size: 0.8rem; color: var(--gold);" id="avail-balance-display">Loading balance...</span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="deposit-amount" class="input-control has-prefix" min="1" step="1" placeholder="0.00" required oninput="updateDepositCalc()">
+                    </div>
+                    <!-- Quick Amount Chips in Rupees -->
+                    <div class="chip-group">
+                        <button type="button" class="chip-btn" onclick="addAmount(500)">+₹500</button>
+                        <button type="button" class="chip-btn" onclick="addAmount(1000)">+₹1,000</button>
+                        <button type="button" class="chip-btn" onclick="addAmount(5000)">+₹5,000</button>
+                        <button type="button" class="chip-btn" onclick="addAmount(10000)">+₹10,000</button>
+                        <button type="button" class="chip-btn" onclick="addAmount(50000)">+₹50,000</button>
+                    </div>
+                </div>
+
+                <!-- Note / Reference -->
+                <div class="form-group">
+                    <label class="form-label">Memo / Deposit Reference (Optional)</label>
+                    <input type="text" id="deposit-memo" class="input-control" placeholder="e.g. Monthly salary, savings top-up, UPI reference">
+                </div>
+
+                <button type="submit" class="btn btn-emerald btn-block btn-lg" id="btn-deposit-submit" style="margin-top: 1.5rem;">
+                    ✓ Confirm &amp; Credit Deposit (₹)
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT COLUMN: Calculation & Account Preview -->
+        <div>
+            <div class="balance-hero-card" style="margin-bottom: 1.5rem;">
+                <div class="balance-hero-top">
+                    <span class="eyebrow">💰 Current Account</span>
+                    <span class="user-acc-id" id="acc-id-pill">Loading...</span>
+                </div>
+                <div class="balance-amount">
+                    <span class="balance-currency">₹</span>
+                    <span id="current-balance">0.00</span>
+                </div>
+                <div class="balance-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Projected After Deposit</span>
+                        <span class="meta-value" id="projected-balance" style="color: var(--emerald-light); font-size: 1.2rem;">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ledger Assurance Note -->
+            <div class="card" style="background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.2);">
+                <div style="font-weight: 700; font-size: 0.95rem; color: var(--emerald-light); margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+                    <span>🛡️</span> Instant Rupee Settlement
+                </div>
+                <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.5;">
+                    Meridian executes synchronous, zero-lag atomic ledger writes. As soon as you confirm, your funds are immediately credited in Indian Rupees (₹) for peer transfers and loan schemes.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- RECEIPT MODAL -->
+<div class="modal-overlay" id="receipt-modal">
+    <div class="modal-box">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <div style="font-size: 2.75rem; margin-bottom: 6px;">✅</div>
+            <h3 style="font-size: 1.35rem;">Deposit Processed</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Official Rupee Deposit Voucher</p>
+        </div>
+
+        <div class="receipt-slip">
+            <div class="receipt-row">
+                <span class="label">Credited Account</span>
+                <span class="val" id="rec-account">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Deposit Amount</span>
+                <span class="val" id="rec-amount" style="color: var(--emerald-light); font-size: 1.1rem;">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Funding Channel</span>
+                <span class="val" id="rec-channel">Instant IMPS/UPI</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">New Available Balance</span>
+                <span class="val" id="rec-new-bal" style="color: var(--gold-light);">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Settlement Status</span>
+                <span class="val" style="color: var(--emerald-light);">CONFIRMED ✓</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn btn-outline" onclick="closeReceipt()">Close</button>
+            <button class="btn btn-gold" onclick="window.location.href='dashboard.html'">Go to Dashboard &rarr;</button>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+let currentBal = 0;
+let selectedMethodName = "IMPS / NEFT / UPI Transfer";
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireUser();
+    if (!session) return;
+    renderNavbar("deposit");
+    await loadAccountData();
+});
+
+async function loadAccountData() {
+    const res = await API.get("/api/account", { account_id: session.account_id, password: session.password });
+    if (res.status !== "ok") {
+        logout();
+        return;
+    }
+    currentBal = res.balance;
+    document.getElementById("current-balance").textContent = fmtMoney(currentBal);
+    document.getElementById("avail-balance-display").textContent = "Available: ₹" + fmtMoney(currentBal);
+    document.getElementById("acc-id-pill").textContent = res.account_id;
+    updateDepositCalc();
+}
+
+function selectMethod(method) {
+    document.querySelectorAll(".scheme-card").forEach(c => c.classList.remove("selected"));
+    document.getElementById("method-" + method).classList.add("selected");
+    if (method === "wire") selectedMethodName = "IMPS / NEFT / UPI Transfer";
+    if (method === "card") selectedMethodName = "Debit / ATM Card Sim";
+    if (method === "cash") selectedMethodName = "Branch Cash Deposit Machine (CDM)";
+}
+
+function addAmount(delta) {
+    const input = document.getElementById("deposit-amount");
+    const val = parseFloat(input.value) || 0;
+    input.value = (val + delta).toFixed(2);
+    updateDepositCalc();
+}
+
+function updateDepositCalc() {
+    const amount = parseFloat(document.getElementById("deposit-amount").value) || 0;
+    const projected = currentBal + amount;
+    document.getElementById("projected-balance").textContent = "₹" + fmtMoney(projected);
+}
+
+async function handleDeposit(e) {
+    e.preventDefault();
+    const amount = document.getElementById("deposit-amount").value;
+    const btn = document.getElementById("btn-deposit-submit");
+
+    if (parseFloat(amount) <= 0) {
+        Toast.error("Please enter a valid deposit amount.");
+        return false;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Processing Transaction...";
+
+    const res = await API.post("/api/deposit", {
+        account_id: session.account_id,
+        password: session.password,
+        amount: amount
+    });
+
+    btn.disabled = false;
+    btn.textContent = "✓ Confirm & Credit Deposit (₹)";
+
+    if (res.status === "ok") {
+        currentBal = res.balance;
+        document.getElementById("current-balance").textContent = fmtMoney(currentBal);
+        document.getElementById("avail-balance-display").textContent = "Available: ₹" + fmtMoney(currentBal);
+        
+        // Show Receipt Modal
+        document.getElementById("rec-account").textContent = session.account_id + " (" + session.name + ")";
+        document.getElementById("rec-amount").textContent = "+₹" + fmtMoney(amount);
+        document.getElementById("rec-channel").textContent = selectedMethodName;
+        document.getElementById("rec-new-bal").textContent = "₹" + fmtMoney(res.balance);
+        document.getElementById("receipt-modal").classList.add("active");
+        
+        document.getElementById("deposit-amount").value = "";
+        document.getElementById("deposit-memo").value = "";
+        updateDepositCalc();
+        Toast.success("Successfully deposited ₹" + fmtMoney(amount));
+    } else {
+        const errorMsg = (res.message || "Deposit error").replace(/_/g, " ");
+        Toast.error("Deposit failed: " + errorMsg);
+    }
+    return false;
+}
+
+function closeReceipt() {
+    document.getElementById("receipt-modal").classList.remove("active");
+}
+</script>
+</body>
+</html>

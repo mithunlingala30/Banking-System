@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meridian Bank &mdash; Modern Digital Banking & Ledger System</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="auth-hero-grid">
+        <!-- LEFT COLUMN: Brand Hero & Value Propositions -->
+        <div>
+            <div class="eyebrow" style="margin-bottom: 1rem;">
+                <span>✨</span> Sovereign Digital Banking &amp; Plain-Text Ledger
+            </div>
+            <h1 style="font-size: 2.75rem; line-height: 1.15; margin-bottom: 1.25rem;">
+                Banking engineered for <span style="background: linear-gradient(135deg, #f3cf65, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">absolute precision</span>.
+            </h1>
+            <p style="color: var(--text-muted); font-size: 1.05rem; line-height: 1.6; margin-bottom: 2rem;">
+                Experience seamless account management, instant peer-to-peer transfers in Rupees (₹), and transparent bank-scheme loans with exact Simple Interest calculation and return schedules.
+            </p>
+
+            <div class="action-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 2rem;">
+                <div class="card" style="padding: 1.25rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 6px;">🔑</div>
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Dual Identifier Login</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Access your vault using either your Account ID (ACC1002) or your Full Name.</div>
+                </div>
+                <div class="card" style="padding: 1.25rem;">
+                    <div style="font-size: 1.5rem; margin-bottom: 6px;">📊</div>
+                    <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 4px;">Bank Loan Schemes</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">Calculate exact Simple Interest and maturity return dates in real time.</div>
+                </div>
+            </div>
+
+            <!-- Fast-Test Account Badges -->
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); padding: 1rem;">
+                <div style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--gold); font-weight: 700; margin-bottom: 8px;">
+                    ⚡ Quick-Fill Demo Credentials:
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="chip-btn" onclick="fillLogin('ACC1003', '123456')">ACC1003 (Puneeth)</button>
+                    <button class="chip-btn" onclick="fillLogin('Puneeth Sai', '123456')">Puneeth Sai (By Name)</button>
+                    <button class="chip-btn" onclick="fillLogin('ADMIN', 'admin123')">ADMIN (Portal)</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Interactive Login / Signup Card -->
+        <div>
+            <div class="card" style="padding: 2.25rem; border-color: rgba(212, 175, 55, 0.25);">
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</div>
+                    <div class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Open New Account</div>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <form id="form-login" onsubmit="return handleLogin(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="login-id">
+                            Account ID or Username
+                        </label>
+                        <input type="text" id="login-id" class="input-control" placeholder="e.g. ACC1003 or Puneeth Sai" required autocomplete="username">
+                        <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 5px;">
+                            You can log in using either your unique Account ID or registered Full Name.
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="login-password">Password / Security PIN</label>
+                        <input type="password" id="login-password" class="input-control" placeholder="Enter your password" required autocomplete="current-password">
+                    </div>
+
+                    <button type="submit" class="btn btn-gold btn-block btn-lg" id="btn-login" style="margin-top: 1.5rem;">
+                        Sign In to Meridian &rarr;
+                    </button>
+                </form>
+
+                <!-- SIGNUP FORM -->
+                <form id="form-signup" style="display: none;" onsubmit="return handleSignup(event)">
+                    <div class="form-group">
+                        <label class="form-label" for="signup-name">Full Legal Name</label>
+                        <input type="text" id="signup-name" class="input-control" placeholder="e.g. Johnathan Doe" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signup-password">Create Access Password</label>
+                        <input type="password" id="signup-password" class="input-control" placeholder="Minimum 4 characters" required minlength="4">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="signup-deposit">Opening Deposit (Optional, INR ₹)</label>
+                        <div class="input-group">
+                            <span class="input-prefix">₹</span>
+                            <input type="number" id="signup-deposit" class="input-control has-prefix" min="0" step="1" placeholder="0.00">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-emerald btn-block btn-lg" id="btn-signup" style="margin-top: 1.5rem;">
+                        Create Account &amp; Generate ID &rarr;
+                    </button>
+                </form>
+
+                <!-- SIGNUP SUCCESS MODAL STATE -->
+                <div id="signup-success" style="display: none; text-align: center; padding: 1rem 0;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                    <h3 style="font-size: 1.4rem; margin-bottom: 0.5rem;">Account Created Successfully!</h3>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">
+                        Your sovereign banking ledger account has been initialized.
+                    </p>
+                    
+                    <div class="receipt-slip" style="text-align: left;">
+                        <div class="receipt-row">
+                            <span class="label">Assigned Account ID</span>
+                            <span class="val" id="new-account-id" style="color: var(--gold-light); font-size: 1.1rem;">-</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="label">Account Holder</span>
+                            <span class="val" id="new-account-name">-</span>
+                        </div>
+                        <div class="receipt-row">
+                            <span class="label">Opening Balance</span>
+                            <span class="val" id="new-account-balance" style="color: var(--emerald-light);">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <p style="font-size: 0.8rem; color: var(--gold); margin-bottom: 1.5rem;">
+                        💡 You can now log in using either this <strong>Account ID</strong> or your <strong>Full Name</strong>.
+                    </p>
+
+                    <button class="btn btn-gold btn-block" onclick="window.location.href='dashboard.html'">
+                        Proceed to Dashboard &rarr;
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine &middot; Real-Time Audit Integrity
+</footer>
+
+<script src="app.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    renderNavbar("index");
+});
+
+function switchTab(tab) {
+    document.getElementById("tab-login").classList.toggle("active", tab === "login");
+    document.getElementById("tab-signup").classList.toggle("active", tab === "signup");
+    document.getElementById("form-login").style.display = tab === "login" ? "block" : "none";
+    document.getElementById("form-signup").style.display = tab === "signup" ? "block" : "none";
+    document.getElementById("signup-success").style.display = "none";
+}
+
+function fillLogin(ident, pass) {
+    switchTab("login");
+    document.getElementById("login-id").value = ident;
+    document.getElementById("login-password").value = pass;
+    Toast.info(`Filled credentials for ${ident}`);
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    const ident = document.getElementById("login-id").value.trim();
+    const password = document.getElementById("login-password").value;
+    const btn = document.getElementById("btn-login");
+    
+    btn.disabled = true;
+    btn.textContent = "Authenticating...";
+
+    const res = await API.post("/api/login", { identifier: ident, password });
+    btn.disabled = false;
+    btn.textContent = "Sign In to Meridian →";
+
+    if (res.status === "ok") {
+        Session.save(res.account_id, password, res.role, res.name);
+        Toast.success(`Welcome back, ${res.name}!`);
+        setTimeout(() => {
+            window.location.href = res.role === "admin" ? "admin.html" : "dashboard.html";
+        }, 500);
+    } else {
+        const errorMsg = (res.message || "Invalid credentials").replace(/_/g, " ");
+        Toast.error("Sign-in failed: " + errorMsg);
+    }
+    return false;
+}
+
+async function handleSignup(e) {
+    e.preventDefault();
+    const name = document.getElementById("signup-name").value.trim();
+    const password = document.getElementById("signup-password").value;
+    const initial_deposit = document.getElementById("signup-deposit").value || "0";
+    const btn = document.getElementById("btn-signup");
+
+    btn.disabled = true;
+    btn.textContent = "Opening Account...";
+
+    const res = await API.post("/api/signup", { name, password, initial_deposit });
+    btn.disabled = false;
+    btn.textContent = "Create Account & Generate ID →";
+
+    if (res.status === "ok") {
+        Session.save(res.account_id, password, "user", res.name);
+        document.getElementById("form-signup").style.display = "none";
+        document.getElementById("new-account-id").textContent = res.account_id;
+        document.getElementById("new-account-name").textContent = res.name;
+        document.getElementById("new-account-balance").textContent = "₹" + fmtMoney(res.balance);
+        document.getElementById("signup-success").style.display = "block";
+        Toast.success("Account opened successfully!");
+    } else {
+        const errorMsg = (res.message || "Could not create account").replace(/_/g, " ");
+        Toast.error("Registration error: " + errorMsg);
+    }
+    return false;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+ADMIN|Bank Administrator|admin123|0.00|active|admin
+ACC1001|Alice|pw1|2200.00|active|user
+ACC1002|Mithun Reddy|123456|104800.00|active|user
+ACC1003|Puneeth Sai|123456|100000.00|active|user

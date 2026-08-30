@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Money &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">💸 Peer-to-Peer Settlement</div>
+            <h1 class="page-title">Transfer Funds</h1>
+            <p class="page-subtitle">Send money instantly in Rupees (₹) to any Meridian account holder using their Account ID or Full Name.</p>
+        </div>
+        <div>
+            <a href="dashboard.html" class="btn btn-outline">&larr; Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: start;">
+        <!-- LEFT COLUMN: Transfer Form -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>📤</span> Outgoing Transfer Order
+                </div>
+                <span class="pill pill-active">Zero Network Fee</span>
+            </div>
+
+            <form onsubmit="return handleTransfer(event)">
+                <!-- Recipient Identifier -->
+                <div class="form-group">
+                    <label class="form-label" for="transfer-to">Recipient Account ID or Full Name</label>
+                    <input type="text" id="transfer-to" class="input-control" placeholder="e.g. ACC1001 or Alice" required autocomplete="off">
+                    <div style="font-size: 0.75rem; color: var(--text-dim); margin-top: 5px;">
+                        Enter the recipient's exact Account ID (e.g. ACC1001) or their registered name.
+                    </div>
+                </div>
+
+                <!-- Transfer Amount -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Transfer Amount (INR ₹)</label>
+                        <span style="font-size: 0.8rem; color: var(--gold);" id="avail-transfer-balance">Available: ₹0.00</span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="transfer-amount" class="input-control has-prefix" min="1" step="1" placeholder="0.00" required oninput="updateTransferSummary()">
+                        <button type="button" class="input-suffix-btn" onclick="useMaxBalance()">MAX</button>
+                    </div>
+                    <!-- Quick Amount Chips in Rupees -->
+                    <div class="chip-group">
+                        <button type="button" class="chip-btn" onclick="setTransferAmount(500)">₹500</button>
+                        <button type="button" class="chip-btn" onclick="setTransferAmount(1000)">₹1,000</button>
+                        <button type="button" class="chip-btn" onclick="setTransferAmount(2500)">₹2,500</button>
+                        <button type="button" class="chip-btn" onclick="setTransferAmount(5000)">₹5,000</button>
+                        <button type="button" class="chip-btn" onclick="setTransferAmount(10000)">₹10,000</button>
+                    </div>
+                </div>
+
+                <!-- Transfer Memo / Category -->
+                <div class="form-group">
+                    <label class="form-label" for="transfer-memo">Payment Purpose / Remarks</label>
+                    <input type="text" id="transfer-memo" class="input-control" placeholder="e.g. UPI transfer, rent payment, vendor settlement">
+                </div>
+
+                <button type="submit" class="btn btn-gold btn-block btn-lg" id="btn-transfer-submit" style="margin-top: 1.5rem;">
+                    ➤ Execute Instant Transfer (₹)
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT COLUMN: Account Context & Review Summary -->
+        <div>
+            <div class="balance-hero-card" style="margin-bottom: 1.5rem;">
+                <div class="balance-hero-top">
+                    <span class="eyebrow">💰 Source Account</span>
+                    <span class="user-acc-id" id="source-acc-id">Loading...</span>
+                </div>
+                <div class="balance-amount">
+                    <span class="balance-currency">₹</span>
+                    <span id="transfer-current-balance">0.00</span>
+                </div>
+                <div class="balance-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Balance After Transfer</span>
+                        <span class="meta-value" id="remaining-balance" style="font-size: 1.2rem;">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transfer Guarantee & Speed Card -->
+            <div class="card" style="background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.2);">
+                <div style="font-weight: 700; font-size: 0.95rem; color: #a5b4fc; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+                    <span>⚡</span> Instant &amp; Irreversible Settlement
+                </div>
+                <ul style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; padding-left: 1.2rem;">
+                    <li>Zero transaction charges on all internal transfers.</li>
+                    <li>Dual-entry atomic debit and credit in Indian Rupees.</li>
+                    <li>Recorded to the permanent ledger with cryptographic timestamping.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- TRANSFER RECEIPT MODAL -->
+<div class="modal-overlay" id="transfer-receipt-modal">
+    <div class="modal-box">
+        <div style="text-align: center; margin-bottom: 1rem;">
+            <div style="font-size: 2.75rem; margin-bottom: 6px;">💸</div>
+            <h3 style="font-size: 1.35rem;">Transfer Completed</h3>
+            <p style="color: var(--text-muted); font-size: 0.85rem;">Official Digital Rupee Remittance Receipt</p>
+        </div>
+
+        <div class="receipt-slip">
+            <div class="receipt-row">
+                <span class="label">Sender</span>
+                <span class="val" id="rec-sender">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Recipient</span>
+                <span class="val" id="rec-recipient" style="color: var(--gold-light);">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Transferred Amount</span>
+                <span class="val" id="rec-transferred" style="color: #fca5a5; font-size: 1.1rem;">-</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Transfer Fee</span>
+                <span class="val" style="color: var(--emerald-light);">₹0.00 (FREE)</span>
+            </div>
+            <div class="receipt-row">
+                <span class="label">Updated Balance</span>
+                <span class="val" id="rec-rem-bal" style="color: var(--gold-light);">-</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button class="btn btn-outline" onclick="closeTransferReceipt()">Close</button>
+            <button class="btn btn-gold" onclick="window.location.href='dashboard.html'">Go to Dashboard &rarr;</button>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+let currentBal = 0;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireUser();
+    if (!session) return;
+    renderNavbar("transfer");
+    await loadAccountData();
+});
+
+async function loadAccountData() {
+    const res = await API.get("/api/account", { account_id: session.account_id, password: session.password });
+    if (res.status !== "ok") {
+        logout();
+        return;
+    }
+    currentBal = res.balance;
+    document.getElementById("transfer-current-balance").textContent = fmtMoney(currentBal);
+    document.getElementById("avail-transfer-balance").textContent = "Available: ₹" + fmtMoney(currentBal);
+    document.getElementById("source-acc-id").textContent = res.account_id;
+    updateTransferSummary();
+}
+
+function setTransferAmount(amt) {
+    document.getElementById("transfer-amount").value = amt.toFixed(2);
+    updateTransferSummary();
+}
+
+function useMaxBalance() {
+    if (currentBal > 0) {
+        document.getElementById("transfer-amount").value = currentBal.toFixed(2);
+        updateTransferSummary();
+    }
+}
+
+function updateTransferSummary() {
+    const amt = parseFloat(document.getElementById("transfer-amount").value) || 0;
+    const remaining = currentBal - amt;
+    const remEl = document.getElementById("remaining-balance");
+    
+    if (remaining < 0) {
+        remEl.textContent = "Insufficient Funds (-₹" + fmtMoney(Math.abs(remaining)) + ")";
+        remEl.style.color = "var(--ruby)";
+    } else {
+        remEl.textContent = "₹" + fmtMoney(remaining);
+        remEl.style.color = "var(--text-main)";
+    }
+}
+
+async function handleTransfer(e) {
+    e.preventDefault();
+    const to_id = document.getElementById("transfer-to").value.trim();
+    const amount = document.getElementById("transfer-amount").value;
+    const btn = document.getElementById("btn-transfer-submit");
+
+    if (parseFloat(amount) <= 0) {
+        Toast.error("Please enter a valid transfer amount.");
+        return false;
+    }
+    if (parseFloat(amount) > currentBal) {
+        Toast.error("Insufficient balance to execute this transfer.");
+        return false;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Executing Settlement...";
+
+    const res = await API.post("/api/transfer", {
+        account_id: session.account_id,
+        password: session.password,
+        to_id: to_id,
+        amount: amount
+    });
+
+    btn.disabled = false;
+    btn.textContent = "➤ Execute Instant Transfer (₹)";
+
+    if (res.status === "ok") {
+        currentBal = res.balance;
+        document.getElementById("transfer-current-balance").textContent = fmtMoney(currentBal);
+        document.getElementById("avail-transfer-balance").textContent = "Available: ₹" + fmtMoney(currentBal);
+        
+        // Show Receipt
+        document.getElementById("rec-sender").textContent = session.account_id + " (" + session.name + ")";
+        document.getElementById("rec-recipient").textContent = to_id;
+        document.getElementById("rec-transferred").textContent = "-₹" + fmtMoney(amount);
+        document.getElementById("rec-rem-bal").textContent = "₹" + fmtMoney(res.balance);
+        document.getElementById("transfer-receipt-modal").classList.add("active");
+
+        document.getElementById("transfer-to").value = "";
+        document.getElementById("transfer-amount").value = "";
+        document.getElementById("transfer-memo").value = "";
+        updateTransferSummary();
+        Toast.success("Transferred ₹" + fmtMoney(amount) + " successfully!");
+    } else {
+        const errorMsg = (res.message || "Transfer error").replace(/_/g, " ");
+        Toast.error("Transfer rejected: " + errorMsg);
+    }
+    return false;
+}
+
+function closeTransferReceipt() {
+    document.getElementById("transfer-receipt-modal").classList.remove("active");
+}
+</script>
+</body>
+</html>

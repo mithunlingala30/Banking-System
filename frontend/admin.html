@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Admin Console &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- ADMIN HEADER -->
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">🛡️ Executive Oversight &amp; Audit</div>
+            <h1 class="page-title">Admin Management Console</h1>
+            <p class="page-subtitle">Underwrite loan requests, inspect user balances, and audit individual customer transaction statements in real time.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="loadAdminData()">🔄 Refresh Console</button>
+            <a href="dashboard.html" class="btn btn-ghost">Switch to Client View &rarr;</a>
+        </div>
+    </div>
+
+    <!-- STATS SUMMARY CARDS -->
+    <div class="action-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 2rem;">
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Registered User Accounts</div>
+            <div class="amount" id="adm-stat-accounts" style="font-size: 1.8rem; font-weight: 700; color: var(--gold-light); margin-top: 4px;">0</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Active ledger clients</div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Pending Loan Applications</div>
+            <div class="amount" id="adm-stat-pending" style="font-size: 1.8rem; font-weight: 700; color: #f59e0b; margin-top: 4px;">0</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Awaiting underwriting review</div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Total System Volume</div>
+            <div class="amount" id="adm-stat-txns" style="font-size: 1.8rem; font-weight: 700; color: var(--emerald-light); margin-top: 4px;">0</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Audited transactions in Rupee ledger</div>
+        </div>
+    </div>
+
+    <!-- TABS & SECTIONS -->
+    <div class="card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="switchAdminTab('loans', this)">🏛️ Pending Loans (<span id="tab-count-loans">0</span>)</button>
+                <button class="filter-tab" onclick="switchAdminTab('accounts', this)">👥 All Accounts (<span id="tab-count-accs">0</span>)</button>
+                <button class="filter-tab" onclick="switchAdminTab('txns', this)">📜 Master Ledger</button>
+            </div>
+            <div id="acc-search-box" style="display: none;">
+                <input type="text" id="admin-acc-search" class="input-control" style="padding: 6px 14px; font-size: 0.85rem; width: 220px;" placeholder="Search user name or ID..." oninput="filterAccountsTable()">
+            </div>
+        </div>
+
+        <!-- TAB 1: PENDING LOANS -->
+        <div id="tab-sec-loans">
+            <div class="table-container">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Loan ID</th>
+                            <th>Timestamp</th>
+                            <th>Borrower Account</th>
+                            <th>Scheme, Terms &amp; Return Date</th>
+                            <th style="text-align: right;">Principal (₹)</th>
+                            <th style="text-align: center;">Underwrite Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adm-loans-rows">
+                        <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading pending loans...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 2: ALL ACCOUNTS (CLICK USER NAME TO VIEW TRANSACTIONS) -->
+        <div id="tab-sec-accounts" style="display: none;">
+            <div style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: var(--radius-sm); padding: 10px 16px; margin-bottom: 1rem; font-size: 0.85rem; color: var(--gold-light); display: flex; align-items: center; gap: 8px;">
+                <span>💡</span> <strong>Audit Tip:</strong> Click on any customer's <strong>Name</strong> or <strong>Account ID</strong> to view their complete transaction history and statement.
+            </div>
+            <div class="table-container">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Account ID</th>
+                            <th>Account Holder Name (Click to View Ledger)</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Available Balance (INR ₹)</th>
+                            <th style="text-align: center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adm-accounts-rows">
+                        <tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading accounts...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 3: ALL TRANSACTIONS -->
+        <div id="tab-sec-txns" style="display: none;">
+            <div class="table-container">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Txn ID</th>
+                            <th>Timestamp</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Type</th>
+                            <th>Note / Memo</th>
+                            <th style="text-align: right;">Amount (INR ₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adm-txns-rows">
+                        <tr><td colspan="7" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading master ledger...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- USER TRANSACTIONS AUDIT MODAL -->
+<div class="modal-overlay" id="user-txns-modal">
+    <div class="modal-box" style="max-width: 820px; width: 95%;">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-subtle); padding-bottom: 1rem;">
+            <div>
+                <div class="eyebrow">👤 Individual Account Audit</div>
+                <h3 style="font-size: 1.4rem; color: var(--text-main); margin-top: 2px;" id="modal-user-name">User Statement</h3>
+                <div style="display: flex; gap: 10px; align-items: center; margin-top: 4px;">
+                    <span class="mono" style="color: var(--gold-light); font-weight: 700;" id="modal-user-id">ACC...</span>
+                    <span class="pill pill-approved" id="modal-user-status">Active</span>
+                </div>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase;">Available Balance</div>
+                <div class="amount" id="modal-user-balance" style="font-size: 1.6rem; font-weight: 700; color: var(--emerald-light);">₹0.00</div>
+            </div>
+        </div>
+
+        <!-- User Summary Metrics -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.25rem;">
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Total Credits / Inflows</div>
+                <div class="amount" id="modal-user-inflows" style="font-size: 1.15rem; font-weight: 700; color: var(--emerald-light); margin-top: 2px;">+₹0.00</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Total Debits / Outflows</div>
+                <div class="amount" id="modal-user-outflows" style="font-size: 1.15rem; font-weight: 700; color: #fca5a5; margin-top: 2px;">-₹0.00</div>
+            </div>
+            <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px;">
+                <div style="font-size: 0.72rem; color: var(--text-dim); text-transform: uppercase;">Activity Count</div>
+                <div class="amount" id="modal-user-txn-count" style="font-size: 1.15rem; font-weight: 700; color: var(--gold-light); margin-top: 2px;">0</div>
+            </div>
+        </div>
+
+        <!-- User Ledger Table -->
+        <div class="table-container" style="max-height: 340px; overflow-y: auto; margin-bottom: 1.25rem;">
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Counterparty</th>
+                        <th>Memo</th>
+                        <th style="text-align: right;">Amount (INR ₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="modal-user-txns-rows">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">Loading user transactions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print User Statement</button>
+            <button class="btn btn-gold btn-sm" onclick="closeUserTxnsModal()">Close Statement</button>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine &middot; Real-Time Audit Integrity
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+let allAccountsList = [];
+let allMasterTxns = [];
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireAdmin();
+    if (!session) return;
+    renderNavbar("admin");
+    await loadAdminData();
+});
+
+function switchAdminTab(tabName, btn) {
+    document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    document.getElementById("tab-sec-loans").style.display = tabName === "loans" ? "block" : "none";
+    document.getElementById("tab-sec-accounts").style.display = tabName === "accounts" ? "block" : "none";
+    document.getElementById("tab-sec-txns").style.display = tabName === "txns" ? "block" : "none";
+    document.getElementById("acc-search-box").style.display = tabName === "accounts" ? "block" : "none";
+}
+
+async function loadAdminData() {
+    const [accRes, txnRes, loanRes] = await Promise.all([
+        API.get("/api/admin/accounts", { password: session.password }),
+        API.get("/api/admin/transactions", { password: session.password }),
+        API.get("/api/admin/loans/pending", { password: session.password }),
+    ]);
+
+    // Store globally for fast user drilldown
+    if (accRes.status === "ok" && accRes.accounts) {
+        allAccountsList = accRes.accounts;
+        document.getElementById("adm-stat-accounts").textContent = accRes.accounts.length;
+        document.getElementById("tab-count-accs").textContent = accRes.accounts.length;
+        renderAccountsTable(allAccountsList);
+    }
+
+    if (txnRes.status === "ok" && txnRes.transactions) {
+        allMasterTxns = txnRes.transactions;
+        document.getElementById("adm-stat-txns").textContent = txnRes.transactions.length;
+        const rows = document.getElementById("adm-txns-rows");
+        rows.innerHTML = [...txnRes.transactions].reverse().map(t => `
+            <tr>
+                <td class="mono" style="font-weight: 700; color: var(--gold);">#TXN-${t.id}</td>
+                <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(t.time)}</td>
+                <td class="mono">${escapeHtml(t.from)}</td>
+                <td class="mono">${escapeHtml(t.to)}</td>
+                <td><span class="pill pill-approved">${escapeHtml(t.type)}</span></td>
+                <td style="color: var(--text-muted); font-size: 0.82rem;">${escapeHtml(t.note || "-")}</td>
+                <td class="amount" style="text-align: right; font-weight: 700;">₹${fmtMoney(t.amount)}</td>
+            </tr>
+        `).join("");
+    }
+
+    // Pending Loans
+    if (loanRes.status === "ok" && loanRes.loans) {
+        document.getElementById("adm-stat-pending").textContent = loanRes.loans.length;
+        document.getElementById("tab-count-loans").textContent = loanRes.loans.length;
+        const rows = document.getElementById("adm-loans-rows");
+        
+        if (loanRes.loans.length === 0) {
+            rows.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">No pending loan applications awaiting review. ✨</td></tr>`;
+        } else {
+            rows.innerHTML = loanRes.loans.map(l => `
+                <tr>
+                    <td class="mono" style="font-weight: 700; color: var(--gold-light);">#LN-${l.loan_id}</td>
+                    <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(l.time)}</td>
+                    <td class="mono" style="font-weight: 700;">${escapeHtml(l.account_id)}</td>
+                    <td style="font-size: 0.85rem; max-width: 320px; line-height: 1.4;">${escapeHtml(l.reason)}</td>
+                    <td class="amount" style="text-align: right; font-weight: 700; font-size: 1.1rem; color: #ffffff;">₹${fmtMoney(l.amount)}</td>
+                    <td style="text-align: center;">
+                        <div style="display: inline-flex; gap: 8px;">
+                            <button class="btn btn-emerald btn-sm" onclick="underwriteLoan(${l.loan_id}, 'approve')">✓ Approve &amp; Disburse</button>
+                            <button class="btn btn-danger btn-sm" onclick="underwriteLoan(${l.loan_id}, 'reject')">✕ Reject</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join("");
+        }
+    }
+}
+
+function renderAccountsTable(accounts) {
+    const rows = document.getElementById("adm-accounts-rows");
+    if (!accounts || accounts.length === 0) {
+        rows.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">No user accounts found.</td></tr>`;
+        return;
+    }
+
+    rows.innerHTML = accounts.map(a => `
+        <tr>
+            <td class="mono" style="font-weight: 700;">
+                <a href="javascript:void(0)" onclick="viewUserTransactions('${escapeHtml(a.id)}', '${escapeHtml(a.name)}', ${a.balance}, '${a.status}')" style="color: var(--gold-light); text-decoration: underline; font-weight: 700;" title="Click to view all transactions for ${escapeHtml(a.name)}">
+                    ${escapeHtml(a.id)}
+                </a>
+            </td>
+            <td style="font-weight: 600;">
+                <a href="javascript:void(0)" onclick="viewUserTransactions('${escapeHtml(a.id)}', '${escapeHtml(a.name)}', ${a.balance}, '${a.status}')" style="color: #ffffff; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;" title="Click to view ${escapeHtml(a.name)}'s transactions">
+                    <span>${escapeHtml(a.name)}</span>
+                    <span style="font-size: 0.75rem; color: var(--gold-light);">📜 [View Ledger]</span>
+                </a>
+            </td>
+            <td><span class="pill ${a.status === 'active' ? 'pill-active' : 'pill-frozen'}">${escapeHtml(a.status)}</span></td>
+            <td class="amount" style="text-align: right; font-weight: 700; color: var(--emerald-light);">₹${fmtMoney(a.balance)}</td>
+            <td style="text-align: center;">
+                <button class="btn btn-outline btn-sm" onclick="viewUserTransactions('${escapeHtml(a.id)}', '${escapeHtml(a.name)}', ${a.balance}, '${a.status}')">
+                    📜 View Statements
+                </button>
+            </td>
+        </tr>
+    `).join("");
+}
+
+function filterAccountsTable() {
+    const q = (document.getElementById("admin-acc-search").value || "").trim().toLowerCase();
+    const filtered = allAccountsList.filter(a => 
+        a.name.toLowerCase().includes(q) || a.id.toLowerCase().includes(q)
+    );
+    renderAccountsTable(filtered);
+}
+
+/* ---------- VIEW INDIVIDUAL USER TRANSACTIONS (DRILLDOWN) ---------- */
+function viewUserTransactions(userId, userName, balance, status) {
+    document.getElementById("modal-user-name").textContent = userName;
+    document.getElementById("modal-user-id").textContent = userId;
+    document.getElementById("modal-user-status").textContent = status.toUpperCase();
+    document.getElementById("modal-user-balance").textContent = "₹" + fmtMoney(balance);
+
+    const userTxns = allMasterTxns.filter(t => 
+        t.from.toLowerCase() === userId.toLowerCase() || t.to.toLowerCase() === userId.toLowerCase()
+    );
+
+    let inflows = 0;
+    let outflows = 0;
+
+    for (const t of userTxns) {
+        const incoming = t.to.toLowerCase() === userId.toLowerCase();
+        if (incoming) {
+            inflows += t.amount;
+        } else {
+            outflows += t.amount;
+        }
+    }
+
+    document.getElementById("modal-user-inflows").textContent = "+₹" + fmtMoney(inflows);
+    document.getElementById("modal-user-outflows").textContent = "-₹" + fmtMoney(outflows);
+    document.getElementById("modal-user-txn-count").textContent = userTxns.length;
+
+    const tbody = document.getElementById("modal-user-txns-rows");
+    if (userTxns.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">No transactions recorded for ${escapeHtml(userName)} (${userId}) yet.</td></tr>`;
+    } else {
+        tbody.innerHTML = [...userTxns].reverse().map(t => {
+            const incoming = t.to.toLowerCase() === userId.toLowerCase();
+            const sign = incoming ? "+" : "-";
+            const amtClass = incoming ? "amount-pos" : "amount-neg";
+            
+            let typeBadge = `<span class="pill pill-pending">${escapeHtml(t.type)}</span>`;
+            if (t.type === "deposit") typeBadge = `<span class="pill pill-approved">💳 Deposit</span>`;
+            if (t.type === "loan_disbursement") typeBadge = `<span class="pill pill-approved">🏛️ Loan Disbursed</span>`;
+            if (t.type === "transfer") {
+                typeBadge = incoming 
+                    ? `<span class="pill pill-approved">↓ Received</span>` 
+                    : `<span class="pill pill-rejected">↑ Sent</span>`;
+            }
+
+            const counterparty = incoming ? `From: <strong>${escapeHtml(t.from)}</strong>` : `To: <strong>${escapeHtml(t.to)}</strong>`;
+
+            return `
+                <tr>
+                    <td class="mono" style="font-weight: 700; color: var(--gold);">#TXN-${t.id}</td>
+                    <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(t.time)}</td>
+                    <td>${typeBadge}</td>
+                    <td class="mono" style="font-size: 0.82rem;">${counterparty}</td>
+                    <td style="color: var(--text-muted); font-size: 0.82rem;">${escapeHtml(t.note || "-")}</td>
+                    <td class="amount ${amtClass}" style="text-align: right; font-weight: 700;">${sign}₹${fmtMoney(t.amount)}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    document.getElementById("user-txns-modal").classList.add("active");
+}
+
+function closeUserTxnsModal() {
+    document.getElementById("user-txns-modal").classList.remove("active");
+}
+
+// Close modal on Escape key
+document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeUserTxnsModal();
+});
+
+async function underwriteLoan(loan_id, decision) {
+    const actionLabel = decision === "approve" ? "approve and disburse funds for" : "reject";
+    if (!confirm(`Are you sure you want to ${actionLabel} Loan #${loan_id}?`)) return;
+
+    const res = await API.post("/api/admin/loans/decide", {
+        password: session.password,
+        loan_id: String(loan_id),
+        decision: decision
+    });
+
+    if (res.status === "ok") {
+        Toast.success(`Loan #${loan_id} was ${decision}d successfully!`);
+        await loadAdminData();
+    } else {
+        const errorMsg = (res.message || "Action failed").replace(/_/g, " ");
+        Toast.error("Decision error: " + errorMsg);
+    }
+}
+</script>
+</body>
+</html>

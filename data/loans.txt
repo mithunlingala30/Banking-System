@@ -1,0 +1,2 @@
+1|ACC1002|1000.00|bike|approved|2026-08-30 13:37:33
+2|ACC1002|5000.00|[Vehicle & Auto Loan] 8.9% p.a.   24 Mo (EMI: $245.42, Total: $5890.00, Due: Aug 30, 2028) - Purchase electric utility scooter|approved|2026-08-30 13:49:10

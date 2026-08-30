@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Statement &amp; Ledger &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">📜 Complete Audit Trail</div>
+            <h1 class="page-title">Account Statement &amp; Ledger</h1>
+            <p class="page-subtitle">Inspect your complete cryptographic transaction ledger in Indian Rupees (₹), filter by payment type, and export official statement slips.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-outline" onclick="window.print()">🖨️ Print Statement</button>
+            <a href="dashboard.html" class="btn btn-primary">&larr; Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- METRICS SUMMARY CARDS -->
+    <div class="action-grid" style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); margin-bottom: 2rem;">
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Total Inflow Credits</div>
+            <div class="amount" id="stat-inflows" style="font-size: 1.6rem; font-weight: 700; color: var(--emerald-light); margin-top: 4px;">+₹0.00</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Deposits, received transfers &amp; loans</div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Total Outflow Debits</div>
+            <div class="amount" id="stat-outflows" style="font-size: 1.6rem; font-weight: 700; color: #fca5a5; margin-top: 4px;">-₹0.00</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Sent peer-to-peer transfers</div>
+        </div>
+
+        <div class="card" style="padding: 1.25rem;">
+            <div style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); letter-spacing: 0.05em; font-weight: 600;">Total Transactions</div>
+            <div class="amount" id="stat-total-count" style="font-size: 1.6rem; font-weight: 700; color: var(--gold-light); margin-top: 4px;">0</div>
+            <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">Immutable rupee ledger records</div>
+        </div>
+    </div>
+
+    <!-- LEDGER CONTROLS & TABLE -->
+    <div class="card">
+        <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+            <div class="filter-tabs">
+                <button class="filter-tab active" onclick="setFilter('all', this)">All Records</button>
+                <button class="filter-tab" onclick="setFilter('deposit', this)">Deposits</button>
+                <button class="filter-tab" onclick="setFilter('incoming', this)">Transfers In</button>
+                <button class="filter-tab" onclick="setFilter('outgoing', this)">Transfers Out</button>
+                <button class="filter-tab" onclick="setFilter('loan_disbursement', this)">Loans</button>
+            </div>
+
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" id="ledger-search" class="input-control" style="padding: 6px 14px; font-size: 0.85rem; width: 220px;" placeholder="Search ledger..." oninput="applyLedgerFilter()">
+                <button class="btn btn-ghost btn-sm" onclick="loadLedger()">🔄 Refresh</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Txn ID</th>
+                        <th>Timestamp</th>
+                        <th>Type / Operation</th>
+                        <th>Counterparty / Source</th>
+                        <th>Reference / Note</th>
+                        <th style="text-align: right;">Amount (INR ₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="statement-rows">
+                    <tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">Loading statement ledger...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine &middot; Real-Time Audit Integrity
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+let allTransactions = [];
+let activeFilter = "all";
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireUser();
+    if (!session) return;
+    renderNavbar("transactions");
+    await loadLedger();
+});
+
+async function loadLedger() {
+    const res = await API.get("/api/account", { account_id: session.account_id, password: session.password });
+    if (res.status !== "ok") {
+        logout();
+        return;
+    }
+    allTransactions = res.transactions || [];
+    computeStats(allTransactions);
+    applyLedgerFilter();
+}
+
+function computeStats(txns) {
+    let inflow = 0;
+    let outflow = 0;
+
+    for (const t of txns) {
+        const incoming = t.to.toLowerCase() === session.account_id.toLowerCase();
+        if (incoming) {
+            inflow += t.amount;
+        } else {
+            outflow += t.amount;
+        }
+    }
+
+    document.getElementById("stat-inflows").textContent = "+₹" + fmtMoney(inflow);
+    document.getElementById("stat-outflows").textContent = "-₹" + fmtMoney(outflow);
+    document.getElementById("stat-total-count").textContent = txns.length;
+}
+
+function setFilter(filterType, btn) {
+    activeFilter = filterType;
+    document.querySelectorAll(".filter-tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    applyLedgerFilter();
+}
+
+function applyLedgerFilter() {
+    const query = (document.getElementById("ledger-search").value || "").trim().toLowerCase();
+    const tbody = document.getElementById("statement-rows");
+
+    const filtered = allTransactions.filter(t => {
+        const incoming = t.to.toLowerCase() === session.account_id.toLowerCase();
+        
+        // Filter by tab
+        if (activeFilter === "deposit" && t.type !== "deposit") return false;
+        if (activeFilter === "incoming" && (t.type !== "transfer" || !incoming)) return false;
+        if (activeFilter === "outgoing" && (t.type !== "transfer" || incoming)) return false;
+        if (activeFilter === "loan_disbursement" && t.type !== "loan_disbursement") return false;
+
+        // Filter by search query
+        if (query) {
+            const matchesId = String(t.id).includes(query);
+            const matchesTime = t.time.toLowerCase().includes(query);
+            const matchesFrom = t.from.toLowerCase().includes(query);
+            const matchesTo = t.to.toLowerCase().includes(query);
+            const matchesNote = (t.note || "").toLowerCase().includes(query);
+            const matchesType = t.type.toLowerCase().includes(query);
+            if (!matchesId && !matchesTime && !matchesFrom && !matchesTo && !matchesNote && !matchesType) {
+                return false;
+            }
+        }
+        return true;
+    });
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim); padding: 2rem;">No matching ledger transactions found.</td></tr>`;
+        return;
+    }
+
+    const reversed = [...filtered].reverse();
+    tbody.innerHTML = reversed.map(t => {
+        const incoming = t.to.toLowerCase() === session.account_id.toLowerCase();
+        const sign = incoming ? "+" : "-";
+        const amtClass = incoming ? "amount-pos" : "amount-neg";
+        
+        let typeBadge = `<span class="pill pill-pending">${escapeHtml(t.type)}</span>`;
+        if (t.type === "deposit") typeBadge = `<span class="pill pill-approved">💳 Deposit</span>`;
+        if (t.type === "loan_disbursement") typeBadge = `<span class="pill pill-approved">🏛️ Loan Disbursed</span>`;
+        if (t.type === "transfer") {
+            typeBadge = incoming 
+                ? `<span class="pill pill-approved">↓ Transfer Received</span>` 
+                : `<span class="pill pill-rejected">↑ Transfer Sent</span>`;
+        }
+
+        const counterparty = incoming ? `From: <strong>${escapeHtml(t.from)}</strong>` : `To: <strong>${escapeHtml(t.to)}</strong>`;
+
+        return `
+            <tr>
+                <td class="mono" style="font-weight: 700; color: var(--gold);">#TXN-${t.id}</td>
+                <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(t.time)}</td>
+                <td>${typeBadge}</td>
+                <td class="mono" style="font-size: 0.85rem;">${counterparty}</td>
+                <td style="color: var(--text-muted); font-size: 0.85rem;">${escapeHtml(t.note || "-")}</td>
+                <td class="amount ${amtClass}" style="text-align: right; font-size: 0.95rem;">${sign}₹${fmtMoney(t.amount)}</td>
+            </tr>
+        `;
+    }).join("");
+}
+</script>
+</body>
+</html>

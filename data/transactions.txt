@@ -1,0 +1,6 @@
+1|2026-08-30 13:36:33|EXTERNAL|ACC1001|1000.00|deposit|initial_deposit
+2|2026-08-30 13:37:17|EXTERNAL|ACC1002|100000.00|deposit|initial_deposit
+3|2026-08-30 13:40:07|LOAN|ACC1002|1000.00|loan_disbursement|approved_loan
+4|2026-08-30 13:49:10|LOAN|ACC1002|5000.00|loan_disbursement|approved_loan
+5|2026-08-30 13:53:29|ACC1002|ACC1001|1200.00|transfer|user_transfer
+6|2026-08-30 14:02:12|EXTERNAL|ACC1003|100000.00|deposit|cash_deposit

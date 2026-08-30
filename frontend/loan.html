@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank Loan Schemes &amp; Calculator &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">🏛️ Official Indian Banking Credit Schemes</div>
+            <h1 class="page-title">Loan Schemes &amp; Return Calculator</h1>
+            <p class="page-subtitle">Calculate exact Simple Interest in Rupees (₹), monthly repayment installments (EMI), and precise maturity return dates as per standard banking schemes.</p>
+        </div>
+        <div>
+            <a href="dashboard.html" class="btn btn-outline">&larr; Back to Dashboard</a>
+        </div>
+    </div>
+
+    <!-- SECTION 1: BANK LOAN SCHEMES PICKER -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📊</span> Select Bank Loan Scheme
+            </div>
+            <span class="pill pill-pending">Regulated Simple Interest (₹)</span>
+        </div>
+        <div class="scheme-grid" id="scheme-cards-container">
+            <!-- Rendered by JS from LoanSchemes -->
+        </div>
+    </div>
+
+    <!-- SECTION 2: INTERACTIVE SIMPLE INTEREST CALCULATOR & APPLICATION FORM -->
+    <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 2rem; align-items: start; margin-bottom: 2.5rem;">
+        <!-- LEFT: Calculator Inputs & Apply Form -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🧮</span> Loan Parameters &amp; Application
+                </div>
+                <span class="pill pill-approved" id="selected-scheme-badge">Personal Flexi Loan</span>
+            </div>
+
+            <form onsubmit="return handleLoanApply(event)">
+                <!-- Loan Amount (Principal P in Rupees) -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Principal Amount Borrowed (₹ P)</label>
+                        <span style="font-size: 0.8rem; color: var(--gold-light);" id="principal-display">₹1,00,000.00</span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-prefix">₹</span>
+                        <input type="number" id="calc-principal" class="input-control has-prefix" min="1000" max="10000000" step="1000" value="100000" required oninput="runLoanCalculations()">
+                    </div>
+                    <input type="range" class="range-slider" id="slider-principal" min="10000" max="2500000" step="10000" value="100000" oninput="syncPrincipalSlider(this.value)">
+                </div>
+
+                <!-- Annual Interest Rate (R %) -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Annual Simple Interest Rate (% R p.a.)</label>
+                        <span style="font-size: 0.8rem; color: var(--gold-light);" id="rate-display">10.5% per annum</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="calc-rate" class="input-control" min="1" max="50" step="0.1" value="10.5" required oninput="runLoanCalculations()">
+                        <span style="position: absolute; right: 16px; color: var(--gold); font-weight: 700;">% p.a.</span>
+                    </div>
+                </div>
+
+                <!-- Tenure in Months (T) -->
+                <div class="form-group">
+                    <div class="form-label-row">
+                        <label class="form-label">Repayment Tenure / Time (T in Months)</label>
+                        <span style="font-size: 0.8rem; color: var(--emerald-light);" id="tenure-display">12 Months (1.00 Year)</span>
+                    </div>
+                    <div class="input-group">
+                        <input type="number" id="calc-tenure" class="input-control" min="1" max="240" step="1" value="12" required oninput="runLoanCalculations()">
+                        <span style="position: absolute; right: 16px; color: var(--text-dim); font-size: 0.85rem;">Months</span>
+                    </div>
+                    <input type="range" class="range-slider" id="slider-tenure" min="1" max="60" step="1" value="12" oninput="syncTenureSlider(this.value)">
+                </div>
+
+                <!-- Loan Purpose / Justification -->
+                <div class="form-group">
+                    <label class="form-label" for="loan-reason">Purpose / Justification of Loan</label>
+                    <textarea id="loan-reason" class="input-control" rows="2" placeholder="e.g. Commercial inventory purchase, medical expense, vehicle down-payment, home repair" required></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-gold btn-block btn-lg" id="btn-loan-submit" style="margin-top: 1rem;">
+                    🏛️ Submit Loan Application with these Terms &rarr;
+                </button>
+            </form>
+        </div>
+
+        <!-- RIGHT: Live Mathematical Breakdown Widget -->
+        <div>
+            <div class="loan-result-box">
+                <div class="card-header" style="padding-bottom: 0.75rem; margin-bottom: 0.5rem; border-color: rgba(212, 175, 55, 0.2);">
+                    <div class="card-title" style="font-size: 1.1rem; color: var(--gold-light);">
+                        <span>⚡</span> Bank Repayment Schedule
+                    </div>
+                    <span class="mono" style="font-size: 0.75rem; color: var(--text-muted);">SI = (P &times; R &times; T) / 100</span>
+                </div>
+
+                <!-- EXACT MATURITY / RETURN DATE BADGE -->
+                <div class="loan-return-date-badge">
+                    <div>
+                        <div style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--emerald-light); font-weight: 700;">
+                            📅 Exact Maturity / Return Date:
+                        </div>
+                        <div class="mono" id="calc-return-date" style="font-size: 1.15rem; font-weight: 700; color: #ffffff; margin-top: 2px;">
+                            Aug 30, 2027
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <span class="pill pill-approved" id="calc-tenure-pill">12 Months</span>
+                    </div>
+                </div>
+
+                <!-- METRICS GRID -->
+                <div class="loan-kpi-grid">
+                    <div class="loan-kpi-card">
+                        <div class="loan-kpi-label">Principal Amount (P)</div>
+                        <div class="loan-kpi-value" id="res-principal">₹1,00,000.00</div>
+                    </div>
+                    <div class="loan-kpi-card">
+                        <div class="loan-kpi-label">Total Simple Interest (SI)</div>
+                        <div class="loan-kpi-value gold" id="res-interest">+₹10,500.00</div>
+                    </div>
+                    <div class="loan-kpi-card">
+                        <div class="loan-kpi-label">Total Return Payable (P + SI)</div>
+                        <div class="loan-kpi-value emerald" id="res-total">₹1,10,500.00</div>
+                    </div>
+                    <div class="loan-kpi-card">
+                        <div class="loan-kpi-label">Monthly Installment (EMI)</div>
+                        <div class="loan-kpi-value" id="res-emi">₹9,208.33 / mo</div>
+                    </div>
+                </div>
+
+                <!-- PRINCIPAL VS INTEREST RATIO BAR -->
+                <div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.78rem; color: var(--text-dim); margin-bottom: 4px;">
+                        <span>Principal: <strong id="res-principal-pct" style="color: #38bdf8;">90.5%</strong></span>
+                        <span>Interest: <strong id="res-interest-pct" style="color: var(--gold-light);">9.5%</strong></span>
+                    </div>
+                    <div class="loan-ratio-bar">
+                        <div class="ratio-principal" id="bar-principal" style="width: 90.5%;"></div>
+                        <div class="ratio-interest" id="bar-interest" style="width: 9.5%;"></div>
+                    </div>
+                </div>
+
+                <!-- BANK SCHEME NOTE -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 10px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+                    🔒 <strong>Bank Scheme Terms</strong>: Simple Interest is calculated linearly with no compounding charges. Upon Admin underwriting and approval, the Principal amount (₹<span id="note-principal">1,00,000</span>) will be credited directly to your available account balance.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SECTION 3: MY LOANS HISTORY LEDGER -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">
+                <span>📜</span> My Active &amp; Historical Loan Applications
+            </div>
+            <button class="btn btn-ghost btn-sm" onclick="loadMyLoans()">🔄 Refresh Status</button>
+        </div>
+
+        <div class="table-container">
+            <table class="ledger-table">
+                <thead>
+                    <tr>
+                        <th>Loan ID</th>
+                        <th>Application Date</th>
+                        <th>Scheme &amp; Terms Breakdown</th>
+                        <th>Status</th>
+                        <th style="text-align: right;">Principal Amount (₹)</th>
+                    </tr>
+                </thead>
+                <tbody id="my-loans-rows">
+                    <tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Loading loan ledger...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; Simple Interest Banking Engine &middot; Real-Time Audit Integrity
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+let currentScheme = LoanSchemes[0];
+let currentLoanCalc = null;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireUser();
+    if (!session) return;
+    renderNavbar("loan");
+    renderSchemeCards();
+    selectScheme(LoanSchemes[0].id);
+    await loadMyLoans();
+});
+
+function renderSchemeCards() {
+    const container = document.getElementById("scheme-cards-container");
+    container.innerHTML = LoanSchemes.map(s => `
+        <div class="scheme-card ${s.id === currentScheme.id ? 'selected' : ''}" id="card-scheme-${s.id}" onclick="selectScheme('${s.id}')">
+            <div class="scheme-name">${escapeHtml(s.name)}</div>
+            <div class="scheme-rate">${s.rate}% <span style="font-size: 0.7rem; font-weight: normal; color: var(--text-dim);">p.a.</span></div>
+            <div class="scheme-tenure">${s.minTenure} - ${s.maxTenure} Months tenure</div>
+        </div>
+    `).join("");
+}
+
+function selectScheme(schemeId) {
+    const found = LoanSchemes.find(s => s.id === schemeId);
+    if (!found) return;
+    currentScheme = found;
+    
+    document.querySelectorAll(".scheme-card").forEach(c => c.classList.remove("selected"));
+    const activeCard = document.getElementById("card-scheme-" + schemeId);
+    if (activeCard) activeCard.classList.add("selected");
+    
+    document.getElementById("selected-scheme-badge").textContent = found.name;
+    document.getElementById("calc-rate").value = found.rate;
+    document.getElementById("calc-tenure").value = found.defaultTenure;
+    document.getElementById("slider-tenure").value = found.defaultTenure;
+    document.getElementById("slider-tenure").min = found.minTenure;
+    document.getElementById("slider-tenure").max = found.maxTenure;
+    
+    if (found.defaultAmount) {
+        document.getElementById("calc-principal").value = found.defaultAmount;
+        document.getElementById("slider-principal").value = Math.min(2500000, found.defaultAmount);
+    }
+    
+    runLoanCalculations();
+}
+
+function syncPrincipalSlider(val) {
+    document.getElementById("calc-principal").value = val;
+    runLoanCalculations();
+}
+
+function syncTenureSlider(val) {
+    document.getElementById("calc-tenure").value = val;
+    runLoanCalculations();
+}
+
+function runLoanCalculations() {
+    const P = parseFloat(document.getElementById("calc-principal").value) || 0;
+    const R = parseFloat(document.getElementById("calc-rate").value) || 0;
+    const M = parseInt(document.getElementById("calc-tenure").value) || 1;
+
+    // Update Slider UI
+    document.getElementById("slider-principal").value = Math.min(2500000, Math.max(10000, P));
+    document.getElementById("slider-tenure").value = M;
+    
+    document.getElementById("principal-display").textContent = "₹" + fmtMoney(P);
+    document.getElementById("rate-display").textContent = R + "% per annum";
+    const years = (M / 12).toFixed(2);
+    document.getElementById("tenure-display").textContent = `${M} Months (${years} ${years == 1 ? 'Year' : 'Years'})`;
+
+    currentLoanCalc = calculateSimpleInterestLoan(P, R, M);
+
+    // Update Result Box
+    document.getElementById("calc-return-date").textContent = currentLoanCalc.exactReturnDate;
+    document.getElementById("calc-tenure-pill").textContent = M + " Months";
+    document.getElementById("res-principal").textContent = "₹" + fmtMoney(currentLoanCalc.principal);
+    document.getElementById("res-interest").textContent = "+₹" + fmtMoney(currentLoanCalc.simpleInterest);
+    document.getElementById("res-total").textContent = "₹" + fmtMoney(currentLoanCalc.totalRepayment);
+    document.getElementById("res-emi").textContent = "₹" + fmtMoney(currentLoanCalc.monthlyEMI) + " / mo";
+    
+    document.getElementById("res-principal-pct").textContent = currentLoanCalc.principalPercent.toFixed(1) + "%";
+    document.getElementById("res-interest-pct").textContent = currentLoanCalc.interestPercent.toFixed(1) + "%";
+    document.getElementById("bar-principal").style.width = currentLoanCalc.principalPercent + "%";
+    document.getElementById("bar-interest").style.width = currentLoanCalc.interestPercent + "%";
+    document.getElementById("note-principal").textContent = fmtMoney(currentLoanCalc.principal);
+}
+
+async function handleLoanApply(e) {
+    e.preventDefault();
+    if (!currentLoanCalc) runLoanCalculations();
+    
+    const reason = document.getElementById("loan-reason").value.trim();
+    if (!reason) {
+        Toast.error("Please enter the purpose for this loan.");
+        return false;
+    }
+    
+    const btn = document.getElementById("btn-loan-submit");
+    btn.disabled = true;
+    btn.textContent = "Submitting Loan Request...";
+
+    const res = await API.post("/api/loan/request", {
+        account_id: session.account_id,
+        password: session.password,
+        amount: currentLoanCalc.principal,
+        scheme: currentScheme.name,
+        interest_rate: currentLoanCalc.annualRate,
+        tenure_months: currentLoanCalc.tenureMonths,
+        total_payable: currentLoanCalc.totalRepayment,
+        return_date: currentLoanCalc.exactReturnDate,
+        reason: reason
+    });
+
+    btn.disabled = false;
+    btn.textContent = "🏛️ Submit Loan Application with these Terms →";
+
+    if (res.status === "ok") {
+        Toast.success(`Loan application #${res.loan_id} successfully submitted for Admin approval!`);
+        document.getElementById("loan-reason").value = "";
+        await loadMyLoans();
+    } else {
+        const errorMsg = (res.message || "Loan submission failed").replace(/_/g, " ");
+        Toast.error("Application error: " + errorMsg);
+    }
+    return false;
+}
+
+async function loadMyLoans() {
+    const res = await API.get("/api/loans/mine", { account_id: session.account_id, password: session.password });
+    const tbody = document.getElementById("my-loans-rows");
+    
+    if (res.status !== "ok" || !res.loans || res.loans.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim); padding: 2rem;">No loan applications recorded yet.</td></tr>`;
+        return;
+    }
+
+    const loans = [...res.loans].reverse();
+    tbody.innerHTML = loans.map(l => {
+        let pillClass = "pill-pending";
+        if (l.status === "approved") pillClass = "pill-approved";
+        if (l.status === "rejected") pillClass = "pill-rejected";
+
+        return `
+            <tr>
+                <td class="mono" style="font-weight: 700; color: var(--gold-light);">#LN-${l.loan_id}</td>
+                <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(l.time)}</td>
+                <td style="max-width: 380px;">${escapeHtml(l.reason)}</td>
+                <td><span class="pill ${pillClass}">${escapeHtml(l.status)}</span></td>
+                <td class="amount" style="text-align: right; font-weight: 700; font-size: 1rem; color: #ffffff;">₹${fmtMoney(l.amount)}</td>
+            </tr>
+        `;
+    }).join("");
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Dashboard &mdash; Meridian Bank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="main-wrapper">
+    <!-- DASHBOARD HEADER -->
+    <div class="page-header">
+        <div>
+            <div class="eyebrow">✨ Sovereign Digital Account</div>
+            <h1 class="page-title">Financial Overview</h1>
+            <p class="page-subtitle" id="welcome-subtitle">Welcome back, loading your ledger snapshot...</p>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn btn-outline btn-sm" onclick="refreshDashboard()">🔄 Refresh Ledger</button>
+            <a href="loan.html" class="btn btn-gold btn-sm">🏛️ Apply for Loan</a>
+        </div>
+    </div>
+
+    <!-- HERO BALANCE CARD -->
+    <div class="balance-hero-card" style="margin-bottom: 2rem;">
+        <div class="balance-hero-top">
+            <span class="eyebrow">💰 Total Available Liquidity</span>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="user-acc-id" id="dash-account-id" onclick="copyToClipboard(session.account_id, 'Account ID Copied!')" title="Click to copy">ACC... 📋</span>
+                <span class="pill pill-approved" id="dash-status">Active</span>
+            </div>
+        </div>
+        <div class="balance-amount">
+            <span class="balance-currency">₹</span>
+            <span id="dash-balance">0.00</span>
+        </div>
+        <div class="balance-meta">
+            <div class="meta-item">
+                <span class="meta-label">Account Holder</span>
+                <span class="meta-value" id="dash-name">-</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Total Transactions</span>
+                <span class="meta-value" id="dash-txn-count">0</span>
+            </div>
+            <div class="meta-item">
+                <span class="meta-label">Active Loans</span>
+                <span class="meta-value" id="dash-loan-count" style="color: var(--gold-light);">0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- DEDICATED SEPARATE ACTION PAGES HUB -->
+    <div style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700;">Banking Actions</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Select a dedicated module to perform operations</span>
+        </div>
+
+        <div class="action-grid">
+            <!-- DEPOSIT PAGE LINK -->
+            <a href="deposit.html" class="action-card">
+                <div class="action-icon-box action-icon-deposit">💳</div>
+                <div>
+                    <div class="action-title">Deposit Funds</div>
+                    <div class="action-desc">Top up balance via UPI, NEFT/RTGS wire transfer, or branch cash counter.</div>
+                </div>
+                <div style="color: var(--emerald-light); font-size: 0.82rem; font-weight: 700; margin-top: auto;">
+                    Open Deposit Page &rarr;
+                </div>
+            </a>
+
+            <!-- TRANSFER PAGE LINK -->
+            <a href="transfer.html" class="action-card">
+                <div class="action-icon-box action-icon-transfer">💸</div>
+                <div>
+                    <div class="action-title">Transfer Money</div>
+                    <div class="action-desc">Send money instantly in Rupees to any account using Account ID or Username.</div>
+                </div>
+                <div style="color: #a5b4fc; font-size: 0.82rem; font-weight: 700; margin-top: auto;">
+                    Open Transfer Page &rarr;
+                </div>
+            </a>
+
+            <!-- LOAN SCHEME PAGE LINK -->
+            <a href="loan.html" class="action-card">
+                <div class="action-icon-box action-icon-loan">🏛️</div>
+                <div>
+                    <div class="action-title">Bank Loan Schemes</div>
+                    <div class="action-desc">Calculate Simple Interest &amp; exact return dates on standard Indian bank schemes.</div>
+                </div>
+                <div style="color: var(--gold-light); font-size: 0.82rem; font-weight: 700; margin-top: auto;">
+                    Open Loan Schemes &rarr;
+                </div>
+            </a>
+
+            <!-- STATEMENT PAGE LINK -->
+            <a href="transactions.html" class="action-card">
+                <div class="action-icon-box action-icon-statement">📜</div>
+                <div>
+                    <div class="action-title">Account Statement</div>
+                    <div class="action-desc">View, filter, search, and print your complete rupee transaction ledger.</div>
+                </div>
+                <div style="color: #67e8f9; font-size: 0.82rem; font-weight: 700; margin-top: auto;">
+                    Open Full Statement &rarr;
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <!-- RECENT ACTIVITY & LOANS PREVIEW -->
+    <div style="display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; align-items: start;">
+        <!-- RECENT TRANSACTIONS PREVIEW -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🕒</span> Recent Transactions
+                </div>
+                <a href="transactions.html" class="btn btn-ghost btn-sm">View All &rarr;</a>
+            </div>
+
+            <div class="table-container">
+                <table class="ledger-table">
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Description</th>
+                            <th style="text-align: right;">Amount (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="dash-recent-txns">
+                        <tr><td colspan="3" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">Loading transactions...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ACTIVE LOAN SCHEMES PREVIEW -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-title">
+                    <span>🏛️</span> Active Loans Status
+                </div>
+                <a href="loan.html" class="btn btn-ghost btn-sm">Apply New &rarr;</a>
+            </div>
+
+            <div id="dash-recent-loans" style="display: flex; flex-direction: column; gap: 10px;">
+                <div style="text-align: center; color: var(--text-dim); padding: 1.5rem;">Loading loan status...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    Meridian Sovereign Bank &middot; High-Performance Plain-Text Ledger Engine &middot; Real-Time Audit Integrity
+</footer>
+
+<script src="app.js"></script>
+<script>
+let session;
+
+document.addEventListener("DOMContentLoaded", async () => {
+    session = Session.requireUser();
+    if (!session) return;
+    renderNavbar("dashboard");
+    await refreshDashboard();
+});
+
+async function refreshDashboard() {
+    document.getElementById("welcome-subtitle").textContent = `Logged in as ${session.name} (\u200e${session.account_id}\u200e)`;
+    document.getElementById("dash-account-id").textContent = session.account_id + " 📋";
+    document.getElementById("dash-name").textContent = session.name;
+
+    const [accRes, loansRes] = await Promise.all([
+        API.get("/api/account", { account_id: session.account_id, password: session.password }),
+        API.get("/api/loans/mine", { account_id: session.account_id, password: session.password })
+    ]);
+
+    if (accRes.status !== "ok") {
+        logout();
+        return;
+    }
+
+    document.getElementById("dash-balance").textContent = fmtMoney(accRes.balance);
+    document.getElementById("dash-txn-count").textContent = accRes.transactions ? accRes.transactions.length : 0;
+    
+    // Render Recent 5 Transactions
+    const txns = accRes.transactions ? [...accRes.transactions].reverse().slice(0, 5) : [];
+    const txnContainer = document.getElementById("dash-recent-txns");
+
+    if (txns.length === 0) {
+        txnContainer.innerHTML = `<tr><td colspan="3" style="text-align: center; color: var(--text-dim); padding: 1.5rem;">No transactions yet. Use Deposit to add funds.</td></tr>`;
+    } else {
+        txnContainer.innerHTML = txns.map(t => {
+            const incoming = t.to.toLowerCase() === session.account_id.toLowerCase();
+            const sign = incoming ? "+" : "-";
+            const amtClass = incoming ? "amount-pos" : "amount-neg";
+            const detail = t.type === "deposit" ? "💳 Direct Deposit"
+                : t.type === "loan_disbursement" ? "🏛️ Loan Disbursed"
+                : incoming ? (`↓ From ${escapeHtml(t.from)}`) : (`↑ To ${escapeHtml(t.to)}`);
+
+            return `
+                <tr>
+                    <td class="mono" style="color: var(--text-muted); font-size: 0.8rem;">${escapeHtml(t.time.split(" ")[0])}</td>
+                    <td style="font-weight: 500;">${escapeHtml(detail)}</td>
+                    <td class="amount ${amtClass}" style="text-align: right;">${sign}₹${fmtMoney(t.amount)}</td>
+                </tr>
+            `;
+        }).join("");
+    }
+
+    // Render Recent Loans
+    const loans = (loansRes.status === "ok" && loansRes.loans) ? [...loansRes.loans].reverse() : [];
+    document.getElementById("dash-loan-count").textContent = loans.length;
+    const loanContainer = document.getElementById("dash-recent-loans");
+
+    if (loans.length === 0) {
+        loanContainer.innerHTML = `
+            <div style="text-align: center; padding: 1.5rem; color: var(--text-dim);">
+                <div>No active loans.</div>
+                <a href="loan.html" class="btn btn-gold btn-sm" style="margin-top: 10px;">Explore Bank Schemes &rarr;</a>
+            </div>
+        `;
+    } else {
+        loanContainer.innerHTML = loans.slice(0, 3).map(l => {
+            let pillClass = "pill-pending";
+            if (l.status === "approved") pillClass = "pill-approved";
+            if (l.status === "rejected") pillClass = "pill-rejected";
+
+            return `
+                <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); padding: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <div style="font-weight: 700; font-size: 0.9rem; color: var(--gold-light);">#LN-${l.loan_id} &middot; ₹${fmtMoney(l.amount)}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(l.reason)}</div>
+                    </div>
+                    <span class="pill ${pillClass}">${escapeHtml(l.status)}</span>
+                </div>
+            `;
+        }).join("");
+    }
+}
+</script>
+</body>
+</html>
